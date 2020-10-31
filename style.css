@@ -1,0 +1,110 @@
+html {
+    margin: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 8px;
+    line-height: 1.2;
+}
+
+.app {
+    max-width: 500px;
+}
+
+.header {
+    margin-bottom: 10px;
+}
+
+.header .logo {
+    display: block;
+    width: 96px;
+    height: 96px;
+}
+
+.clock {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.clock .value {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 15px;
+}
+
+.clock .icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 15px;
+    height: 15px;
+    border-radius: 15px;
+}
+
+.clock .icon.day {
+    background-color: #ef7b00;
+}
+
+.clock .icon.night {
+    background-color: #2459a7;
+}
+
+.lot {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.lot.favorite {
+    border-color: #ffd7cb;
+    background: #ffd7cb;
+}
+
+button {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+button * {
+  vertical-align: middle;
+}
+
+button.favorite {
+  background: #fff;
+  border: 1px solid #999;
+  color: #000;
+}
+
+button.unfavorite {
+  background: #fff;
+  border: 1px solid #ff8c68;
+  color: #dc0000;
+}
+
+.lot .price {
+    float: right;
+    text-align: right;
+    font-size: 1.2rem;
+}
+
+.lot h1 {
+    margin: 0 0 15px 0;
+    line-height: 1;
+}
+
+.lot p {
+    margin: 0 0 15px 0;
+}
+
+.loading {
+    padding: 15px;
+    border-radius: 6px;
+    background: #eee;
+    text-align: center;
+}
