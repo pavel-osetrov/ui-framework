@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>UI-Framework</title>
         <link rel="stylesheet" href="style.css">
-        
-        
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
     </head>
     <body>
 
@@ -15,9 +15,6 @@
         <div id="root"></div> <!-- Корневой элемент -->
 
         <script>
-
-
-            // ###########################################
 
             const api = {
                 get(url) {
@@ -62,49 +59,25 @@
                 }
             }
 
-            
-
             let state = {
                 time: new Date(),
                 lots: null
             }
 
-            // ###########################################
-            
-            const vDom = {
-                createElement: (type, config, ...children) => {
-                    const key = config ? (config.key || null) : null
-                    const props = config || {}
-                    
-                    if (children.length === 1) {
-                        props.children = children[0]
-                    } else {
-                        props.children = children
-                    }
-                    
-                    return {
-                        type,
-                        key ,
-                        props
-                    }
-                }
-            }
-            // ###########################################
-
             function App( {state} ) {
                 
-                return vDom.createElement('div', {className: 'app'}, 
-                    vDom.createElement(Header),
-                    vDom.createElement(Clock, {time: state.time}),
-                    vDom.createElement(Lots, {lots: state.lots}),
+                return React.createElement('div', {className: 'app'}, 
+                    React.createElement(Header),
+                    React.createElement(Clock, {time: state.time}),
+                    React.createElement(Lots, {lots: state.lots}),
                 )
                 
             }
 
             function Header() {
                 
-                return vDom.createElement('header', {className: 'header'}, 
-                    vDom.createElement(Logo)
+                return React.createElement('header', {className: 'header'}, 
+                    React.createElement(Logo)
                 )
                 
                 return {
@@ -121,182 +94,56 @@
                 }
             }
            
-           
-            
-           
-           
             function Logo() {
-                return vDom.createElement('img', {className: 'logo', src: 'logo.png'}) 
+                return React.createElement('img', {className: 'logo', src: 'logo.png'}) 
             }
 
             function Clock( {time} ) {
                 
                 const isDay = time.getHours() >= 7 && time.getHours() <= 21
                 
-                return vDom.createElement('div', {className: 'clock'},
-                    vDom.createElement('span', {className: 'value'}, time.toLocaleTimeString()),                        
-                    vDom.createElement('span', {className: isDay ? 'icon day' : 'icon night'}),
+                return React.createElement('div', {className: 'clock'},
+                    React.createElement('span', {className: 'value'}, time.toLocaleTimeString()),                        
+                    React.createElement('span', {className: isDay ? 'icon day' : 'icon night'}),
                     
                 )
                 
             }
 
             function Loading() {
-                return vDom.createElement('div', {className: 'loading'}, 'Loading...')
+                return React.createElement('div', {className: 'loading'}, 'Loading...')
             }
 
             function Lots( {lots} ) {
 
                 if (lots === null) {
-                    return vDom.createElement(Loading)
+                    return React.createElement(Loading)
                 }
                 
-                return vDom.createElement('div', {className: 'lots'}, 
-                    lots.map((lot) => vDom.createElement(Lot, {lot, key: lot.id}))
+                return React.createElement('div', {className: 'lots'}, 
+                    lots.map((lot) => React.createElement(Lot, {lot, key: lot.id}))
                 )
             }
 
             function Lot( {lot, key} ) {
                 
-                return vDom.createElement('article', {className: 'lot', key},
-                    vDom.createElement('div', {className: 'price'}, lot.price),
-                    vDom.createElement('h1', {}, lot.name), 
-                    vDom.createElement('p', {}, lot.description)
+                return React.createElement('article', {className: 'lot', key},
+                    React.createElement('div', {className: 'price'}, lot.price),
+                    React.createElement('h1', {}, lot.name), 
+                    React.createElement('p', {}, lot.description)
                 
                 )
             }
 
-            function render(virtualDom, realDomRoot) {
-                
-                const evaluatedVirtualDom = evaluate(virtualDom)
-                
-                const virtualDomRoot = {
-                    type: realDomRoot.tagName.toLowerCase(),
-                    props: {
-                        id: realDomRoot.id,
-                        children: [
-                            evaluatedVirtualDom
-                        ]
-                    }
-                }
-
-                sync(virtualDomRoot, realDomRoot)
-            }
-            
-            
-            // вычисляет виртуальное дерево, то есть получая функции будут подменены на результат выполнения этих функций
-            function evaluate (virtualNode) {
-                
-                if (typeof virtualNode !== 'object') {
-                    return virtualNode
-                }
-                
-                if (typeof virtualNode.type === 'function') {
-                    // рекурсивное выполнение вложенных функций, 
-                    // в нашем приложении мы дергаем сначала функцию Lots, которая выводит лоты
-                    // но она сначала проверяет есть у нас лоты или нет
-                    // и если лоты пустые, Lots вернет структуру с функцией Loading
-                    // и для обработки таких ситуаций, нужно рекурсивно зациклить вызов функции evaluate
-                    // это для того случая когда 1-я функция возвращает 2-ю, а 2-я вернет 3-ю, а 3-я вернет 4-ю
-                    // чтобы у нас все эти вызовы прошли друг за другом, и в итоге вернулся результат последней функции
-                    return evaluate((virtualNode.type)(virtualNode.props))
-                }
-                
-                const props = virtualNode.props || {}
-                
-                return {
-                    ...virtualNode,
-                    props: {
-                        ...props,
-                        children: Array.isArray(props.children) ? props.children.map(evaluate) : [evaluate(props.children)]
-                    }
-                }
-            }
-
-            function sync(virtualNode, realNode) {
-                //Sync element
-                if (virtualNode.props) {
-                    // берем поля из значений объекта, название атрибута попадев в name а значение в value
-                    Object.entries(virtualNode.props).forEach(([name, value]) => {
-                        if (name === 'key' || name === 'children') {
-                            return
-                        } 
-                        if (realNode[name] !== value) {
-                            realNode[name] = value
-                        }
-                    })
-                }
-                
-                if (virtualNode.key) {
-                    realNode.dataset.key = virtualNode.key
-                }
-                
-                if (typeof virtualNode !== 'object' && virtualNode !== realNode.nodeValue) {
-                    realNode.nodeValue = virtualNode
-                } 
-                
-
-                // Sync child nodes
-                
-                const virtualChildren = virtualNode.props ? virtualNode.props.children || [] : []
-                const realChildren = realNode.childNodes
-
-                for (let i = 0; i < virtualChildren.length || i < realChildren.length; i++) {
-                    const virtual = virtualChildren[i]
-                    const real = realChildren[i]
-                    
-
-                    //Remove
-                    if (virtual == undefined && real !== undefined) {
-                        realNode.remove(real)
-                    }
-                    
-            
-                    // Update
-                    if (virtual !== undefined && real !== undefined && (virtual.type || '') === (real.tagName || '').toLowerCase()) {
-                        sync(virtual, real)
-                    }
-                    
-                    // Replace
-                    if (virtual !== undefined && real !== undefined && (virtual.type || '') !== (real.tagName || '').toLowerCase()) {
-                        const newReal = createRealNodeByVirtual(virtual)
-                        sync(virtual, newReal)
-                        realNode.replaceChild(newReal, real)
-                    }
-                    
-                    
-                    
-                    // Add
-                    
-                    if (virtual !== undefined && real == undefined) {
-                       
-                        const newReal = createRealNodeByVirtual(virtual)
-                        sync(virtual, newReal)
-                        realNode.appendChild(newReal)
-                    }
-                }
-            }
-            
-            function createRealNodeByVirtual(virtual) {
-                if (typeof virtual !== 'object') {
-                    return document.createTextNode('')
-                }
-                return document.createElement(virtual.type)
-            }
-
             // ###########################################
             function renderView(state) {
-                render(
-                        vDom.createElement(App, {state}),
+                ReactDOM.render(
+                        React.createElement(App, {state}),
                         document.getElementById('root')
                         )
             }
 
             renderView(state)
-            // ########################################### 
-
-
-            // ###########################################
 
             setInterval(() => {
 
@@ -338,10 +185,7 @@
                     stream.subscribe(`price-${lot.id}`, onPrice)
                 })
             })
-
-
-            // ###########################################
-
+            
         </script>
     </body>
 </html>
