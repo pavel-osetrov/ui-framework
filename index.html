@@ -9,6 +9,7 @@
         <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
         <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
         <script src="https://unpkg.com/babel-standalone@6/babel.js" crossorigin></script>
+        <script src="https://unpkg.com/redux@4/dist/redux.js" crossorigin></script>
     </head>
     <body>
 
@@ -163,49 +164,10 @@
                 price
             }
         }
-        
-// #############################################################################    
-        
-        class Store {
-            constructor (reducer, initialState) {
-                this.reducer = reducer
-                this.state = reducer(initialState, { type: null })
-                this.listeners = []
-            }
-            
-            getState () {
-                return this.state
-            }
-            
-            subscribe (callback) {
-                this.listeners.push(callback)
-
-                // возвращаем функцию замыкания, для отписки listener
-                return () => {
-                    const index = this.listeners.indexOf(listener)
-                    this.listener.splice(index, 1)
-                }
-            }
-            
-            dispatch (action) {
-                this.state = this.reducer(this.state, action)
-                this.listeners.forEach((listener) => listener())
-            }
-        }
-        
+                
 // #############################################################################
 
-        function combineReducers (reducers) {
-            return (state = {}, action) => {
-                const result = {}
-                Object.entries(reducers).forEach(([key, reducer]) => {
-                    result[key] = reducer(state[key], action)
-                })
-                return result
-            }
-        }
-        
-        const store = new Store(combineReducers({
+        const store = new Redux.createStore(Redux.combineReducers({
             clock: clockReducer,
             auction: auctionReducer
         }))
@@ -235,7 +197,7 @@
         }
 
         function Clock( {time} ) {
-            const isDay = time.getHours() >= 7 && time.getHours() <= 21
+            const isDay = time.getHours() >= 7 && time.getHours() <= 19
 
             return (
                 <div className="clock"> 
