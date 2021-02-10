@@ -8,20 +8,15 @@
         <link rel="stylesheet" href="style.css">
         <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
         <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-        <script src="https://unpkg.com/babel-standalone@6/babel.js" crossorigin> </script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.js" crossorigin></script>
     </head>
     <body>
 
       
     <div id="root"></div> <!-- Корневой элемент -->
 
-        <script type="text/jsx">
-            
-            let state = {
-                time: new Date(),
-                lots: null
-            }
-            
+    <script type="text/jsx">
+
             const api = {
                 get(url) {
                     switch (url) {
@@ -64,7 +59,44 @@
                     }
                 }
             }
-
+ 
+// #############################################################################
+            
+            const initialState = {
+                time: new Date(),
+                lots: null
+            }
+            
+            class Store {
+                constructor (initialState) {
+                    this.state = initialState
+                    this.listeners = []
+                }
+                
+                subscribe (callback) {
+                    this.listeners.push(callback)
+                }
+                
+                getState () {
+                    return this.state
+                }
+                
+                changeState (diff) {
+                    this.state = {
+                        ...this.state,
+                        ...(typeof diff === 'function' ? diff(this.state) : diff)
+                    }
+                    this.listeners.forEach((listener) => {
+                        listener()
+                    })
+                }
+                
+                
+            }
+            
+            const store = new Store(initialState)
+            
+// #############################################################################        
             function App( {state} ) {
                 return (
                     <div className="app">
@@ -133,34 +165,36 @@
                         document.getElementById('root')
                 )
             }
-
+            
+            
+            // подписка на изменения state
+            store.subscribe(() => {
+                renderView(store.getState())
+            })
+            
+            
+            // первоначалььный render
+            renderView(store.getState())
+            
 // #############################################################################
 
-            renderView(state)
+            
 
             setInterval(() => {
-
-                state = {
-                    ...state,
+                
+                store.changeState({
                     time: new Date()
-                }
-
-                renderView(state)
+                })
             }, 1000)
 
             api.get('/lots').then((lots) => {
 
-                state = {
-                    ...state,
+                store.changeState({
                     lots
-                }
+                })
 
-                renderView(state)
-
-                const onPrice = (data) => {
-
-                    state = {
-                        ...state,
+                const onPrice = (data) => {                    
+                     store.changeState((state) => ({                     
                         lots: state.lots.map((lot) => {
                             if (lot.id === data.id) {
                                 return {
@@ -170,8 +204,7 @@
                             }
                             return lot
                         })
-                    }
-                    renderView(state)
+                    }))
                 }
 
                 lots.forEach((lot) => {
