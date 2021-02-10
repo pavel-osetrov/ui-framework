@@ -17,198 +17,293 @@
 
     <script type="text/jsx">
 
-            const api = {
-                get(url) {
-                    switch (url) {
-                        case '/lots':
-                            return new Promise((resolve) => {
-                                setTimeout(() => {  
-                                    resolve([
-                                        {
-                                            id: 1,
-                                            name: 'Apple',
-                                            description: 'Apple description',
-                                            price: 16
-                                        },
-                                        {
-                                            id: 2,
-                                            name: 'Orange',
-                                            description: 'Orange description',
-                                            price: 41
-                                        }
-                                    ])
-                                }, 1000)
+        const api = {
+            get(url) {
+                switch (url) {
+                    case '/lots':
+                        return new Promise((resolve) => {
+                            setTimeout(() => {  
+                                resolve([
+                                    {
+                                        id: 1,
+                                        name: 'Apple',
+                                        description: 'Apple description',
+                                        price: 16
+                                    },
+                                    {
+                                        id: 2,
+                                        name: 'Orange',
+                                        description: 'Orange description',
+                                        price: 41
+                                    }
+                                ])
+                            }, 1000)
 
-                            })
-                        default:
-                            throw new Error('Unknow addres')
-                    }
+                        })
+                    default:
+                        throw new Error('Unknow addres')
                 }
             }
+        }
 
-            const stream = {
-                subscribe(channel, listener) {
-                    const match = /price-(\d+)/.exec(channel)
-                    if (match) {
-                        setInterval(() => {
-                            listener({
-                                id: parseInt(match[1]),
-                                price: Math.round((Math.random() * 10 + 30))
-                            })
-                        }, 400)
-                    }
+        const stream = {
+            subscribe(channel, listener) {
+                const match = /price-(\d+)/.exec(channel)
+                if (match) {
+                    setInterval(() => {
+                        listener({
+                            id: parseInt(match[1]),
+                            price: Math.round((Math.random() * 10 + 30))
+                        })
+                    }, 400)
                 }
             }
+        }
  
-// #############################################################################
-            
-            const initialState = {
-                time: new Date(),
-                lots: null
-            }
-            
-            class Store {
-                constructor (initialState) {
-                    this.state = initialState
-                    this.listeners = []
-                }
-                
-                subscribe (callback) {
-                    this.listeners.push(callback)
-                }
-                
-                getState () {
-                    return this.state
-                }
-                
-                changeState (diff) {
-                    this.state = {
-                        ...this.state,
-                        ...(typeof diff === 'function' ? diff(this.state) : diff)
+// #############################################################################       
+        
+        const clockInitialState = {
+            time: new Date()
+        }
+        
+        const SET_TIME = 'SET_TIME'
+        
+        function clockReducer (state = clockInitialState, action) {
+            switch (action.type) {
+                case SET_TIME:
+                    return {
+                        ...state,
+                        time: action.time
                     }
-                    this.listeners.forEach((listener) => {
-                        listener()
-                    })
-                }
-                
-                
+                default: 
+                    return state
             }
-            
-            const store = new Store(initialState)
-            
-// #############################################################################        
-            function App( {state} ) {
-                return (
-                    <div className="app">
-                        <Header />
-                        <Clock time={state.time} />
-                        <Lots lots={state.lots} />
-                    </div>
-                )
-            }
-
-            function Header() {
-                return (
-                    <header className="header">
-                        <Logo />
-                    </header>
-                )
-            }
-           
-            function Logo() {
-                return <img className="logo" src="logo.png" />
-            }
-
-            function Clock( {time} ) {
-                const isDay = time.getHours() >= 7 && time.getHours() <= 21
-                
-                return (
-                    <div className="clock"> 
-                        <span className="value">{time.toLocaleTimeString()}</span>
-                        <span className={isDay ? 'icon day' : 'icon night'} />
-                    </div>
-                )
-                
-            }
-
-            function Loading() {
-                return <div className="loading">Loading...</div>
-            }
-
-            function Lots( {lots} ) {
-
-                if (lots === null) {
-                    return <Loading />
-                }
-                
-                return (
-                    <div className="lots">
-                        {lots.map((lot) => <Lot lot={lot} key={lot.id} />)}
-                    </div>
-                )
-            }
-
-            function Lot( {lot} ) {
-                
-                return (
-                    <article className="lot">
-                    <div className="price">{lot.price}</div>
-                    <h1>{lot.name}</h1>
-                    <p>{lot.description}</p>
-                    </article>
-                )
-            }
-
-            function renderView(state) {
-                ReactDOM.render(
-                        <App state={state} />,
-                        document.getElementById('root')
-                )
-            }
-            
-            
-            // подписка на изменения state
-            store.subscribe(() => {
-                renderView(store.getState())
-            })
-            
-            
-            // первоначалььный render
-            renderView(store.getState())
-            
-// #############################################################################
-
-            
-
-            setInterval(() => {
-                
-                store.changeState({
-                    time: new Date()
-                })
-            }, 1000)
-
-            api.get('/lots').then((lots) => {
-
-                store.changeState({
-                    lots
-                })
-
-                const onPrice = (data) => {                    
-                     store.changeState((state) => ({                     
+        }
+        
+        const auctionInitialState = {
+            lots: null
+        }
+        
+        const SET_LOTS = 'SET_LOTS'
+        const CHANGE_LOT_PRICE = 'CHANGE_LOT_PRICE'
+        
+        function auctionReducer (state = auctionInitialState, action) {
+            switch (action.type) {
+                case SET_LOTS:
+                    return {
+                        ...state,
+                        lots: action.lots
+                    }
+                case CHANGE_LOT_PRICE:
+                    return {
+                        ...state,
                         lots: state.lots.map((lot) => {
-                            if (lot.id === data.id) {
+                            if (lot.id === action.id) {
                                 return {
                                     ...lot,
-                                    price: data.price
+                                    price: action.price
                                 }
                             }
                             return lot
                         })
-                    }))
+                    }
+                default: 
+                    return state
+            }
+        }
+        
+        function appReducer (state = initialState, action) {
+            switch (action.type) {
+                case SET_TIME:
+                    return {
+                        ...state,
+                        time: action.time
+                    }
+                case SET_LOTS:
+                    return {
+                        ...state,
+                        lots: action.lots
+                    }
+                case CHANGE_LOT_PRICE:
+                    return {
+                        ...state,
+                        lots: state.lots.map((lot) => {
+                            if (lot.id === action.id) {
+                                return {
+                                    ...lot,
+                                    price: action.price
+                                }
+                            }
+                            return lot
+                        })
+                    }
+                default: 
+                    return state
+            }
+        }
+        
+        function setTime (time) {
+            return {
+                type: SET_TIME,
+                time
+            }
+        }
+            
+        function setLots (lots) {
+            return {
+                type: SET_LOTS,
+                lots
+            }
+        }
+            
+        function changeLotPrice (id, price) {
+            return {
+                type: CHANGE_LOT_PRICE,
+                id,
+                price
+            }
+        }
+        
+// #############################################################################    
+        
+        class Store {
+            constructor (reducer, initialState) {
+                this.reducer = reducer
+                this.state = reducer(initialState, { type: null })
+                this.listeners = []
+            }
+            
+            getState () {
+                return this.state
+            }
+            
+            subscribe (callback) {
+                this.listeners.push(callback)
+
+                // возвращаем функцию замыкания, для отписки listener
+                return () => {
+                    const index = this.listeners.indexOf(listener)
+                    this.listener.splice(index, 1)
                 }
+            }
+            
+            dispatch (action) {
+                this.state = this.reducer(this.state, action)
+                this.listeners.forEach((listener) => listener())
+            }
+        }
+        
+// #############################################################################
+
+        function combineReducers (reducers) {
+            return (state = {}, action) => {
+                const result = {}
+                Object.entries(reducers).forEach(([key, reducer]) => {
+                    result[key] = reducer(state[key], action)
+                })
+                return result
+            }
+        }
+        
+        const store = new Store(combineReducers({
+            clock: clockReducer,
+            auction: auctionReducer
+        }))
+            
+// #############################################################################        
+        
+        function App( {state} ) {
+            return (
+                <div className="app">
+                    <Header />
+                    <Clock time={state.clock.time} />
+                    <Lots lots={state.auction.lots} />
+                </div>
+            )
+        }
+
+        function Header() {
+            return (
+                <header className="header">
+                    <Logo />
+                </header>
+            )
+        }
+
+        function Logo() {
+            return <img className="logo" src="logo.png" />
+        }
+
+        function Clock( {time} ) {
+            const isDay = time.getHours() >= 7 && time.getHours() <= 21
+
+            return (
+                <div className="clock"> 
+                    <span className="value">{time.toLocaleTimeString()}</span>
+                    <span className={isDay ? 'icon day' : 'icon night'} />
+                </div>
+            )
+
+        }
+
+        function Loading() {
+            return <div className="loading">Loading...</div>
+        }
+
+        function Lots( {lots} ) {
+
+            if (lots === null) {
+                return <Loading />
+            }
+
+            return (
+                <div className="lots">
+                    {lots.map((lot) => <Lot lot={lot} key={lot.id} />)}
+                </div>
+            )
+        }
+
+        function Lot( {lot} ) {
+
+            return (
+                <article className="lot">
+                <div className="price">{lot.price}</div>
+                <h1>{lot.name}</h1>
+                <p>{lot.description}</p>
+                </article>
+            )
+        }
+
+        function renderView(state) {
+            ReactDOM.render(
+                    <App state={state} />,
+                    document.getElementById('root')
+            )
+        }
+
+
+        // подписка на изменения state
+        store.subscribe(() => {
+            renderView(store.getState())
+        })
+
+
+        // первоначалььный render
+        renderView(store.getState())
+            
+// #############################################################################
+
+            setInterval(() => {
+                store.dispatch(setTime(new Date()))
+            }, 1000)
+
+            api.get('/lots').then((lots) => {
+                store.dispatch(setLots(lots))
 
                 lots.forEach((lot) => {
-                    stream.subscribe(`price-${lot.id}`, onPrice)
+                    stream.subscribe(`price-${lot.id}`, (data) => {                    
+                        store.dispatch(changeLotPrice(data.id, data.price))
+                    })
                 })
             })
             
